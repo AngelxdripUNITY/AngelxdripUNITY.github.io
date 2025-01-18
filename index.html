@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Room</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #74ebd5, #9face6);
+            color: #333;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            color: #ffffff;
+            text-shadow: 1px 1px 2px #333;
+        }
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 600px;
+        }
+        #chat-box {
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            background: #f9f9f9;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #chat-box .message {
+            margin: 5px 0;
+            padding: 8px 10px;
+            border-radius: 8px;
+        }
+        #chat-box .message.user {
+            background: #9face6;
+            color: white;
+            text-align: right;
+        }
+        #chat-box .message.other {
+            background: #74ebd5;
+            color: white;
+            text-align: left;
+        }
+        #inputs {
+            display: flex;
+            width: 100%;
+            gap: 10px;
+        }
+        input, button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        input {
+            flex: 1;
+        }
+        button {
+            flex: 0;
+            background: #74ebd5;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #67d3c2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Room</h1>
+    <div id="chat-container">
+        <div id="chat-box"></div>
+        <div id="inputs">
+            <input id="name" type="text" placeholder="Your name" />
+            <input id="message" type="text" placeholder="Your message" />
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:8089');
+        const chatBox = document.getElementById('chat-box');
+        const nameInput = document.getElementById('name');
+        const messageInput = document.getElementById('message');
+
+        ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', data.name === nameInput.value ? 'user' : 'other');
+            messageElement.textContent = `[${data.name}]: ${data.message}`;
+            chatBox.appendChild(messageElement);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        };
+
+        function sendMessage() {
+            const name = nameInput.value.trim();
+            const message = messageInput.value.trim();
+            if (name && message) {
+                ws.send(JSON.stringify({ name, message }));
+                messageInput.value = '';
+            }
+        }
+    </script>
+</body>
+</html>
