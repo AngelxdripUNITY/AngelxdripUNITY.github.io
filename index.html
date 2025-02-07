@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Minecraft Icon Password Selector</title>
-  <!-- Using Montserrat font from Google Fonts -->
+  <title>Minecraft Server Manager</title>
+  <!-- Import Google Font -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
   <style>
     /* Global Styles */
@@ -20,7 +20,7 @@
       min-height: 100vh;
     }
     header {
-      margin: 30px 0;
+      margin: 20px;
       text-align: center;
       color: #fff;
     }
@@ -31,22 +31,38 @@
     header p {
       font-size: 1.1rem;
     }
-    /* Container for the content */
+    /* Container for main content */
     .container {
       background: #fff;
-      padding: 20px 40px;
+      padding: 20px 30px;
       border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       margin-bottom: 30px;
       max-width: 800px;
       width: 90%;
     }
-    /* Icon Grid Styles */
+    .btn {
+      padding: 12px 20px;
+      margin: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background-color: #6b73ff;
+      color: #fff;
+      transition: background-color 0.3s;
+    }
+    .btn:hover {
+      background-color: #000dff;
+    }
+    .back-btn {
+      background-color: #ff6666;
+    }
     .icon-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
       gap: 15px;
-      margin: 20px auto;
+      margin: 20px 0;
     }
     .icon {
       width: 80px;
@@ -62,70 +78,80 @@
       transform: scale(1.1);
       border-color: #6b73ff;
     }
-    /* Selected Icons Display */
     .selected-icons {
-      margin: 20px auto;
+      margin: 20px 0;
       padding: 15px;
       border: 2px dashed #6b73ff;
       border-radius: 10px;
       background: #f9f9f9;
       display: flex;
-      justify-content: center;
+      flex-wrap: wrap;
       align-items: center;
       gap: 10px;
     }
-    .selected-icons img {
-      border: 2px solid #ddd;
-      border-radius: 5px;
-    }
-    /* Reset Button Styles */
-    button {
-      padding: 12px 25px;
-      font-size: 1rem;
-      cursor: pointer;
-      border: none;
-      background-color: #6b73ff;
-      color: #fff;
-      border-radius: 5px;
-      transition: background-color 0.3s;
+    .server-list {
       margin-top: 20px;
     }
-    button:hover {
-      background-color: #000dff;
+    .server-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
     }
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      .icon {
-        width: 60px;
-        height: 60px;
-      }
-      .selected-icons img {
-        width: 40px;
-        height: 40px;
-      }
+    .server-item:last-child {
+      border-bottom: none;
+    }
+    .server-actions button {
+      margin-left: 10px;
+      padding: 6px 12px;
+      font-size: 0.9rem;
+    }
+    .hidden {
+      display: none;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Minecraft Icon Password Selector</h1>
-    <p>Select a 4-icon password by clicking the icons below</p>
+    <h1>Minecraft Server Manager</h1>
+    <p>Manage your Minecraft servers easily</p>
   </header>
-  <div class="container">
+
+  <!-- Landing View -->
+  <div class="container" id="landingView">
+    <button class="btn" onclick="showCreateServer()">Create Server</button>
+    <button class="btn" onclick="showServerBook()">Find Server</button>
+  </div>
+
+  <!-- Create Server View -->
+  <div class="container hidden" id="createServerView">
+    <h2>Create Server</h2>
+    <input type="text" id="serverName" placeholder="Server Name" style="padding:10px; font-size:1rem; width:80%; margin-bottom: 20px;" />
+    <p>Select a 4-icon code:</p>
     <div class="icon-grid" id="iconGrid">
       <!-- Icons will be dynamically loaded here -->
     </div>
-
     <div class="selected-icons" id="selectedIcons">
-      <strong>Selected Password:</strong>
+      <strong>Selected Code:</strong>
       <div id="passwordDisplay" style="display: flex; gap: 10px; margin-left: 10px;"></div>
     </div>
+    <button class="btn" onclick="launchServer()">Launch Server</button>
+    <button class="btn back-btn" onclick="showLanding()">Back</button>
+  </div>
 
-    <button onclick="resetPassword()">Reset</button>
+  <!-- Server Book View -->
+  <div class="container hidden" id="serverBookView">
+    <h2>Server Book</h2>
+    <div id="serverList" class="server-list">
+      <!-- List of servers will be loaded here -->
+    </div>
+    <button class="btn back-btn" onclick="showLanding()">Back</button>
   </div>
 
   <script>
-    // List of icons with their names and corresponding image file names
+    // List of icons with their names and corresponding image file names.
+    // (Ensure these image files are in the same folder as index.html.)
     const icons = [
       { name: "book", file: "book.png" },
       { name: "balloon", file: "balloon.png" },
@@ -150,8 +176,30 @@
     const selectedIcons = [];
     const maxPasswordLength = 4;
 
+    // ------------------ VIEW SWITCHING ------------------
+    function showLanding() {
+      document.getElementById('landingView').classList.remove('hidden');
+      document.getElementById('createServerView').classList.add('hidden');
+      document.getElementById('serverBookView').classList.add('hidden');
+    }
+
+    function showCreateServer() {
+      document.getElementById('landingView').classList.add('hidden');
+      document.getElementById('createServerView').classList.remove('hidden');
+      resetPassword();
+      loadIcons(); // Load the icon selector for a new server
+    }
+
+    function showServerBook() {
+      document.getElementById('landingView').classList.add('hidden');
+      document.getElementById('serverBookView').classList.remove('hidden');
+      loadServerList();
+    }
+
+    // ------------------ ICON SELECTION (Create Server) ------------------
     function loadIcons() {
       const grid = document.getElementById('iconGrid');
+      grid.innerHTML = ''; // Clear previous icons
       icons.forEach(icon => {
         const img = document.createElement('img');
         img.src = icon.file; // Images are in the same folder as index.html
@@ -181,7 +229,127 @@
       updatePasswordDisplay();
     }
 
-    window.onload = loadIcons;
+    // ------------------ SERVER CREATION ------------------
+    async function launchServer() {
+      const serverName = document.getElementById('serverName').value.trim();
+      if (!serverName) {
+        alert('Please enter a server name.');
+        return;
+      }
+      if (selectedIcons.length !== maxPasswordLength) {
+        alert('Please select exactly 4 icons for your server code.');
+        return;
+      }
+      // Construct the server code as a comma-separated list of icon names
+      const code = selectedIcons.map(icon => icon.name).join(',');
+      const data = { name: serverName, code: code };
+      try {
+        const response = await fetch('http://localhost:3000/servers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (response.ok) {
+          alert('Server launched successfully!');
+          showLanding();
+        } else {
+          const err = await response.json();
+          alert('Failed to launch server. ' + (err.error || ''));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // ------------------ SERVER BOOK (Find Server) ------------------
+    async function loadServerList() {
+      try {
+        const response = await fetch('http://localhost:3000/servers');
+        if (response.ok) {
+          const servers = await response.json();
+          displayServerList(servers);
+        } else {
+          alert('Failed to load server list.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    function displayServerList(servers) {
+      const serverListDiv = document.getElementById('serverList');
+      serverListDiv.innerHTML = '';
+      if (servers.length === 0) {
+        serverListDiv.innerHTML = '<p>No servers found.</p>';
+        return;
+      }
+      servers.forEach(server => {
+        const serverDiv = document.createElement('div');
+        serverDiv.className = 'server-item';
+        serverDiv.innerHTML = `
+          <div>
+            <strong>${server.name}</strong><br/>
+            Code: ${server.code.split(',').map(iconName => `<img src="${getIconFile(iconName)}" alt="${iconName}" width="30">`).join(' ')}
+          </div>
+          <div class="server-actions">
+            <button class="btn" onclick="editServer('${server.code}')">Edit</button>
+            <button class="btn" onclick="deleteServer('${server.code}')">Delete</button>
+          </div>
+        `;
+        serverListDiv.appendChild(serverDiv);
+      });
+    }
+
+    // Helper to get icon file by its name
+    function getIconFile(name) {
+      const icon = icons.find(i => i.name === name);
+      return icon ? icon.file : '';
+    }
+
+    async function deleteServer(code) {
+      if (!confirm('Are you sure you want to delete this server?')) return;
+      try {
+        const response = await fetch(`http://localhost:3000/servers/${encodeURIComponent(code)}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          alert('Server deleted.');
+          loadServerList();
+        } else {
+          alert('Failed to delete server.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // For simplicity, editing only allows changing the server name.
+    async function editServer(code) {
+      const newName = prompt('Enter new server name:');
+      if (!newName) return;
+      try {
+        const response = await fetch(`http://localhost:3000/servers/${encodeURIComponent(code)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newName })
+        });
+        if (response.ok) {
+          alert('Server updated.');
+          loadServerList();
+        } else {
+          alert('Failed to update server.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // Start at landing view
+    showLanding();
   </script>
 </body>
 </html>
