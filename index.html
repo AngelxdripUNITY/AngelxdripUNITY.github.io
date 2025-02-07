@@ -244,7 +244,7 @@
       const code = selectedIcons.map(icon => icon.name).join(',');
       const data = { name: serverName, code: code };
       try {
-        const response = await fetch('http://localhost:3000/servers', {
+        const response = await fetch('https://spa-onto-nutritional-directories.trycloudflare.com/servers', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(data)
@@ -265,7 +265,7 @@
     // ------------------ SERVER BOOK (Find Server) ------------------
     async function loadServerList() {
       try {
-        const response = await fetch('http://localhost:3000/servers');
+        const response = await fetch('https://spa-onto-nutritional-directories.trycloudflare.com/servers');
         if (response.ok) {
           const servers = await response.json();
           displayServerList(servers);
@@ -311,7 +311,7 @@
     async function deleteServer(code) {
       if (!confirm('Are you sure you want to delete this server?')) return;
       try {
-        const response = await fetch(`http://localhost:3000/servers/${encodeURIComponent(code)}`, {
+        const response = await fetch(`https://spa-onto-nutritional-directories.trycloudflare.com/servers/${encodeURIComponent(code)}`, {
           method: 'DELETE'
         });
         if (response.ok) {
@@ -331,7 +331,7 @@
       const newName = prompt('Enter new server name:');
       if (!newName) return;
       try {
-        const response = await fetch(`http://localhost:3000/servers/${encodeURIComponent(code)}`, {
+        const response = await fetch(`https://spa-onto-nutritional-directories.trycloudflare.com/servers/${encodeURIComponent(code)}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name: newName })
