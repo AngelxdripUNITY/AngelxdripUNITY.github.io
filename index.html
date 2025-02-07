@@ -107,7 +107,7 @@
       const grid = document.getElementById('iconGrid');
       icons.forEach(icon => {
         const img = document.createElement('img');
-        img.src = 'images/' + icon.file; // Ensure images are in the "images" folder
+        img.src = icon.file; // Images are now in the same folder as index.html
         img.alt = icon.name;
         img.className = 'icon';
         img.onclick = () => selectIcon(icon);
@@ -125,7 +125,7 @@
     function updatePasswordDisplay() {
       const display = document.getElementById('passwordDisplay');
       display.innerHTML = selectedIcons
-        .map(icon => `<img src="images/${icon.file}" alt="${icon.name}" width="40">`)
+        .map(icon => `<img src="${icon.file}" alt="${icon.name}" width="40">`)
         .join('');
     }
 
