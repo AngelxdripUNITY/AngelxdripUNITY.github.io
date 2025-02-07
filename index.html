@@ -43,7 +43,7 @@
     }
     .btn {
       padding: 12px 20px;
-      margin: 10px;
+      margin: 10px 0;
       font-size: 1rem;
       cursor: pointer;
       border: none;
@@ -51,6 +51,8 @@
       background-color: #6b73ff;
       color: #fff;
       transition: background-color 0.3s;
+      display: block;
+      text-align: center;
     }
     .btn:hover {
       background-color: #000dff;
@@ -110,6 +112,11 @@
     .hidden {
       display: none;
     }
+    .vertical-btn-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -120,8 +127,10 @@
 
   <!-- Landing View -->
   <div class="container" id="landingView">
-    <button class="btn" onclick="showCreateServer()">Create Server</button>
-    <button class="btn" onclick="showServerBook()">Find Server</button>
+    <div class="vertical-btn-group">
+      <button class="btn" onclick="showCreateServer()">Create Server</button>
+      <button class="btn" onclick="showServerBook()">Find Server</button>
+    </div>
   </div>
 
   <!-- Create Server View -->
@@ -149,6 +158,210 @@
     <button class="btn back-btn" onclick="showLanding()">Back</button>
   </div>
 
+  <script>
+    // List of icons with their names and corresponding image file names.
+    // (Ensure these image files are in the same folder as index.html.)
+    const icons = [
+      { name: "book", file: "book.png" },
+      { name: "balloon", file: "balloon.png" },
+      { name: "rail", file: "rail.png" },
+      { name: "alex", file: "alex.png" },
+      { name: "cookie", file: "cookie.png" },
+      { name: "fish", file: "fish.png" },
+      { name: "helper", file: "helper.png" },
+      { name: "cake", file: "cake.png" },
+      { name: "pickaxe", file: "pickaxe.png" },
+      { name: "water bucket", file: "water_bucket.png" },
+      { name: "steve", file: "steve.png" },
+      { name: "apple", file: "apple.png" },
+      { name: "carrot", file: "carrot.png" },
+      { name: "panda", file: "panda.png" },
+      { name: "sign", file: "sign.png" },
+      { name: "potion", file: "potion.png" },
+      { name: "map", file: "map.png" },
+      { name: "llama", file: "llama.png" }
+    ];
+
+    const selectedIcons = [];
+    const maxPasswordLength = 4;
+
+    // ------------------ VIEW SWITCHING ------------------
+    function showLanding() {
+      document.getElementById('landingView').classList.remove('hidden');
+      document.getElementById('createServerView').classList.add('hidden');
+      document.getElementById('serverBookView').classList.add('hidden');
+    }
+
+    function showCreateServer() {
+      document.getElementById('landingView').classList.add('hidden');
+      document.getElementById('createServerView').classList.remove('hidden');
+      resetPassword();
+      loadIcons(); // Load the icon selector for a new server
+    }
+
+    function showServerBook() {
+      document.getElementById('landingView').classList.add('hidden');
+      document.getElementById('serverBookView').classList.remove('hidden');
+      loadServerList();
+    }
+
+    // ------------------ ICON SELECTION (Create Server) ------------------
+    function loadIcons() {
+      const grid = document.getElementById('iconGrid');
+      grid.innerHTML = ''; // Clear previous icons
+      icons.forEach(icon => {
+        const img = document.createElement('img');
+        img.src = icon.file; // Images are in the same folder as index.html
+        img.alt = icon.name;
+        img.className = 'icon';
+        img.onclick = () => selectIcon(icon);
+        grid.appendChild(img);
+      });
+    }
+
+    function selectIcon(icon) {
+      if (selectedIcons.length < maxPasswordLength) {
+        selectedIcons.push(icon);
+        updatePasswordDisplay();
+      }
+    }
+
+    function updatePasswordDisplay() {
+      const display = document.getElementById('passwordDisplay');
+      display.innerHTML = selectedIcons
+        .map(icon => `<img src="${icon.file}" alt="${icon.name}" width="40">`)
+        .join('');
+    }
+
+    function resetPassword() {
+      selectedIcons.length = 0;
+      updatePasswordDisplay();
+    }
+
+    // ------------------ SERVER CREATION ------------------
+    async function launchServer() {
+      const serverName = document.getElementById('serverName').value.trim();
+      if (!serverName) {
+        alert('Please enter a server name.');
+        return;
+      }
+      if (selectedIcons.length !== maxPasswordLength) {
+        alert('Please select exactly 4 icons for your server code.');
+        return;
+      }
+      // Construct the server code as a comma-separated list of icon names
+      const code = selectedIcons.map(icon => icon.name).join(',');
+      const data = { name: serverName, code: code };
+      try {
+        const response = await fetch('https://spa-onto-nutritional-directories.trycloudflare.com/servers', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (response.ok) {
+          alert('Server launched successfully!');
+          showLanding();
+        } else {
+          const err = await response.json();
+          alert('Failed to launch server. ' + (err.error || ''));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // ------------------ SERVER BOOK (Find Server) ------------------
+    async function loadServerList() {
+      try {
+        const response = await fetch('https://spa-onto-nutritional-directories.trycloudflare.com/servers');
+        if (response.ok) {
+          const servers = await response.json();
+          displayServerList(servers);
+        } else {
+          alert('Failed to load server list.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    function displayServerList(servers) {
+      const serverListDiv = document.getElementById('serverList');
+      serverListDiv.innerHTML = '';
+      if (servers.length === 0) {
+        serverListDiv.innerHTML = '<p>No servers found.</p>';
+        return;
+      }
+      servers.forEach(server => {
+        const serverDiv = document.createElement('div');
+        serverDiv.className = 'server-item';
+        serverDiv.innerHTML = `
+          <div>
+            <strong>${server.name}</strong><br/>
+            Code: ${server.code.split(',').map(iconName => `<img src="${getIconFile(iconName)}" alt="${iconName}" width="30">`).join(' ')}
+          </div>
+          <div class="server-actions">
+            <button class="btn" onclick="editServer('${server.code}')">Edit</button>
+            <button class="btn" onclick="deleteServer('${server.code}')">Delete</button>
+          </div>
+        `;
+        serverListDiv.appendChild(serverDiv);
+      });
+    }
+
+    // Helper to get icon file by its name
+    function getIconFile(name) {
+      const icon = icons.find(i => i.name === name);
+      return icon ? icon.file : '';
+    }
+
+    async function deleteServer(code) {
+      if (!confirm('Are you sure you want to delete this server?')) return;
+      try {
+        const response = await fetch(`https://spa-onto-nutritional-directories.trycloudflare.com/servers/${encodeURIComponent(code)}`, {
+          method: 'DELETE'
+        });
+        if (response.ok) {
+          alert('Server deleted.');
+          loadServerList();
+        } else {
+          alert('Failed to delete server.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // For simplicity, editing only allows changing the server name.
+    async function editServer(code) {
+      const newName = prompt('Enter new server name:');
+      if (!newName) return;
+      try {
+        const response = await fetch(`https://spa-onto-nutritional-directories.trycloudflare.com/servers/${encodeURIComponent(code)}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: newName })
+        });
+        if (response.ok) {
+          alert('Server updated.');
+          loadServerList();
+        } else {
+          alert('Failed to update server.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error connecting to the backend.');
+      }
+    }
+
+    // Start at landing view
+    showLanding();
+  </script>
+</body>
+</html>
   <script>
     // List of icons with their names and corresponding image file names.
     // (Ensure these image files are in the same folder as index.html.)
