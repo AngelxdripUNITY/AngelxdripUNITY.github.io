@@ -4,78 +4,125 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Minecraft Icon Password Selector</title>
+  <!-- Using Montserrat font from Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
   <style>
+    /* Global Styles */
     body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      background-color: #f4f4f9;
-      padding: 20px;
+      font-family: 'Montserrat', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #6b73ff, #000dff);
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
     }
-    h1 {
+    header {
+      margin: 30px 0;
+      text-align: center;
+      color: #fff;
+    }
+    header h1 {
+      font-size: 2.5rem;
       margin-bottom: 10px;
     }
-    p {
-      margin-bottom: 20px;
+    header p {
+      font-size: 1.1rem;
     }
+    /* Container for the content */
+    .container {
+      background: #fff;
+      padding: 20px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      margin-bottom: 30px;
+      max-width: 800px;
+      width: 90%;
+    }
+    /* Icon Grid Styles */
     .icon-grid {
       display: grid;
-      grid-template-columns: repeat(6, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
       gap: 15px;
-      margin: 0 auto 20px auto;
-      max-width: 600px;
+      margin: 20px auto;
     }
     .icon {
       width: 80px;
       height: 80px;
       cursor: pointer;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      border: 2px solid #ddd;
+      border-radius: 10px;
       padding: 5px;
-      background-color: #fff;
-      transition: transform 0.2s;
+      background-color: #fafafa;
+      transition: transform 0.2s, border-color 0.2s;
     }
     .icon:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
+      border-color: #6b73ff;
     }
+    /* Selected Icons Display */
     .selected-icons {
       margin: 20px auto;
-      padding: 10px;
-      border: 2px dashed #333;
-      max-width: 400px;
-      background: #fff;
+      padding: 15px;
+      border: 2px dashed #6b73ff;
+      border-radius: 10px;
+      background: #f9f9f9;
       display: flex;
       justify-content: center;
       align-items: center;
       gap: 10px;
     }
+    .selected-icons img {
+      border: 2px solid #ddd;
+      border-radius: 5px;
+    }
+    /* Reset Button Styles */
     button {
-      padding: 10px 20px;
-      font-size: 16px;
+      padding: 12px 25px;
+      font-size: 1rem;
       cursor: pointer;
       border: none;
-      background-color: #333;
+      background-color: #6b73ff;
       color: #fff;
-      border-radius: 4px;
+      border-radius: 5px;
+      transition: background-color 0.3s;
+      margin-top: 20px;
     }
     button:hover {
-      background-color: #555;
+      background-color: #000dff;
+    }
+    /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .icon {
+        width: 60px;
+        height: 60px;
+      }
+      .selected-icons img {
+        width: 40px;
+        height: 40px;
+      }
     }
   </style>
 </head>
 <body>
-  <h1>Minecraft Icon Password Selector</h1>
-  <p>Select a 4-icon password by clicking the icons below:</p>
+  <header>
+    <h1>Minecraft Icon Password Selector</h1>
+    <p>Select a 4-icon password by clicking the icons below</p>
+  </header>
+  <div class="container">
+    <div class="icon-grid" id="iconGrid">
+      <!-- Icons will be dynamically loaded here -->
+    </div>
 
-  <div class="icon-grid" id="iconGrid">
-    <!-- Icons will be dynamically loaded here -->
+    <div class="selected-icons" id="selectedIcons">
+      <strong>Selected Password:</strong>
+      <div id="passwordDisplay" style="display: flex; gap: 10px; margin-left: 10px;"></div>
+    </div>
+
+    <button onclick="resetPassword()">Reset</button>
   </div>
-
-  <div class="selected-icons" id="selectedIcons">
-    <strong>Selected Password:</strong>
-    <div id="passwordDisplay" style="display: flex; gap: 10px; margin-left: 10px;"></div>
-  </div>
-
-  <button onclick="resetPassword()">Reset</button>
 
   <script>
     // List of icons with their names and corresponding image file names
@@ -107,7 +154,7 @@
       const grid = document.getElementById('iconGrid');
       icons.forEach(icon => {
         const img = document.createElement('img');
-        img.src = icon.file; // Images are now in the same folder as index.html
+        img.src = icon.file; // Images are in the same folder as index.html
         img.alt = icon.name;
         img.className = 'icon';
         img.onclick = () => selectIcon(icon);
