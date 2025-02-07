@@ -1,132 +1,140 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chat Room</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #74ebd5, #9face6);
-            color: #333;
-        }
-        h1 {
-            font-size: 1.8rem;
-            margin-bottom: 15px;
-            color: #ffffff;
-            text-shadow: 1px 1px 2px #333;
-        }
-        #chat-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background: white;
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 90%;
-            max-width: 480px;
-            height: 80%;
-        }
-        #chat-box {
-            width: 100%;
-            flex: 1;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding: 10px;
-            background: #f9f9f9;
-            overflow-y: auto;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        #chat-box .message {
-            margin: 5px 0;
-            padding: 8px 10px;
-            border-radius: 8px;
-            word-wrap: break-word;
-            font-size: 0.9rem;
-        }
-        #chat-box .message.user {
-            background: #9face6;
-            color: white;
-            text-align: right;
-        }
-        #chat-box .message.other {
-            background: #74ebd5;
-            color: white;
-            text-align: left;
-        }
-        #inputs {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            width: 100%;
-            margin-top: 10px;
-        }
-        input, button {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 1rem;
-        }
-        input {
-            flex: 1 1 auto;
-            min-width: 50%;
-        }
-        button {
-            flex: 1 1 30%;
-            background: #74ebd5;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #67d3c2;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minecraft Icon Password Selector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      background-color: #f4f4f9;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 10px;
+    }
+    p {
+      margin-bottom: 20px;
+    }
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 15px;
+      margin: 0 auto 20px auto;
+      max-width: 600px;
+    }
+    .icon {
+      width: 80px;
+      height: 80px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      padding: 5px;
+      background-color: #fff;
+      transition: transform 0.2s;
+    }
+    .icon:hover {
+      transform: scale(1.05);
+    }
+    .selected-icons {
+      margin: 20px auto;
+      padding: 10px;
+      border: 2px dashed #333;
+      max-width: 400px;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      border: none;
+      background-color: #333;
+      color: #fff;
+      border-radius: 4px;
+    }
+    button:hover {
+      background-color: #555;
+    }
+  </style>
 </head>
 <body>
-    <h1>Chat Room</h1>
-    <div id="chat-container">
-        <div id="chat-box"></div>
-        <div id="inputs">
-            <input id="name" type="text" placeholder="Your name" />
-            <input id="message" type="text" placeholder="Your message" />
-            <button onclick="sendMessage()">Send</button>
-        </div>
-    </div>
+  <h1>Minecraft Icon Password Selector</h1>
+  <p>Select a 4-icon password by clicking the icons below:</p>
 
-<script>
-    // Use the ngrok WebSocket URL
-    const ws = new WebSocket('wss://9dbe-162-202-218-46.ngrok-free.app');
-    const chatBox = document.getElementById('chat-box');
-    const nameInput = document.getElementById('name');
-    const messageInput = document.getElementById('message');
+  <div class="icon-grid" id="iconGrid">
+    <!-- Icons will be dynamically loaded here -->
+  </div>
 
-    ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        const messageElement = document.createElement('div');
-        messageElement.classList.add('message', data.name === nameInput.value ? 'user' : 'other');
-        messageElement.textContent = `[${data.name}]: ${data.message}`;
-        chatBox.appendChild(messageElement);
-        chatBox.scrollTop = chatBox.scrollHeight;
-    };
+  <div class="selected-icons" id="selectedIcons">
+    <strong>Selected Password:</strong>
+    <div id="passwordDisplay" style="display: flex; gap: 10px; margin-left: 10px;"></div>
+  </div>
 
-    function sendMessage() {
-        const name = nameInput.value.trim();
-        const message = messageInput.value.trim();
-        if (name && message) {
-            ws.send(JSON.stringify({ name, message }));
-            messageInput.value = '';
-        }
+  <button onclick="resetPassword()">Reset</button>
+
+  <script>
+    // List of icons with their names and corresponding image file names
+    const icons = [
+      { name: "book", file: "book.png" },
+      { name: "balloon", file: "balloon.png" },
+      { name: "rail", file: "rail.png" },
+      { name: "alex", file: "alex.png" },
+      { name: "cookie", file: "cookie.png" },
+      { name: "fish", file: "fish.png" },
+      { name: "helper", file: "helper.png" },
+      { name: "cake", file: "cake.png" },
+      { name: "pickax", file: "pickax.png" },
+      { name: "water bucket", file: "water_bucket.png" },
+      { name: "steve", file: "steve.png" },
+      { name: "apple", file: "apple.png" },
+      { name: "carrot", file: "carrot.png" },
+      { name: "panda", file: "panda.png" },
+      { name: "sign", file: "sign.png" },
+      { name: "potion", file: "potion.png" },
+      { name: "map", file: "map.png" },
+      { name: "llama", file: "llama.png" }
+    ];
+
+    const selectedIcons = [];
+    const maxPasswordLength = 4;
+
+    function loadIcons() {
+      const grid = document.getElementById('iconGrid');
+      icons.forEach(icon => {
+        const img = document.createElement('img');
+        img.src = 'images/' + icon.file; // Ensure images are in the "images" folder
+        img.alt = icon.name;
+        img.className = 'icon';
+        img.onclick = () => selectIcon(icon);
+        grid.appendChild(img);
+      });
     }
-</script>
 
+    function selectIcon(icon) {
+      if (selectedIcons.length < maxPasswordLength) {
+        selectedIcons.push(icon);
+        updatePasswordDisplay();
+      }
+    }
+
+    function updatePasswordDisplay() {
+      const display = document.getElementById('passwordDisplay');
+      display.innerHTML = selectedIcons
+        .map(icon => `<img src="images/${icon.file}" alt="${icon.name}" width="40">`)
+        .join('');
+    }
+
+    function resetPassword() {
+      selectedIcons.length = 0;
+      updatePasswordDisplay();
+    }
+
+    window.onload = loadIcons;
+  </script>
 </body>
 </html>
