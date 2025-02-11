@@ -119,6 +119,7 @@
         .memory-list {
             margin-top: 20px;
         }
+
     </style>
 </head>
 <body>
@@ -152,13 +153,13 @@
             <h2>Train the AI</h2>
 
             <div class="input-group">
-                <label for="keyword">Keyword:</label>
-                <input type="text" id="keyword" placeholder="Enter keyword" />
+                <label for="keyword">Keywords (comma separated):</label>
+                <input type="text" id="keyword" placeholder="Enter keywords" />
             </div>
 
             <div class="input-group">
-                <label for="response">Response:</label>
-                <textarea id="response" placeholder="Enter response"></textarea>
+                <label for="response">Responses (comma separated):</label>
+                <textarea id="response" placeholder="Enter responses"></textarea>
             </div>
 
             <div class="input-group">
@@ -183,6 +184,10 @@
         <div id="memoryTab" class="tab-content">
             <h2>AI Memory</h2>
             <div id="memoryList" class="memory-list"></div>
+
+            <button onclick="exportMemory()">Export Memory</button>
+            <input type="file" id="importFile" onchange="importMemory(event)" style="display:none" />
+            <button onclick="document.getElementById('importFile').click()">Import Memory</button>
         </div>
 
         <div id="trainingFeedback" class="feedback"></div>
@@ -191,6 +196,7 @@
     <script>
         const aiMemory = {
             words: {}, // Stores definitions, responses, and bias
+            phrases: {}, // Stores multi-word phrases
         };
 
         // Show the appropriate tab
@@ -241,18 +247,27 @@
             let highestConfidence = 0;
 
             // Find the best match, considering bias and context
-            Object.keys(aiMemory.words).forEach((keyword) => {
-                const similarity = calculateSimilarity(userInput, keyword);
-                const confidence = similarity * aiMemory.words[keyword].bias;
+            Object.keys(aiMemory.words).forEach((keywords) => {
+                const keywordList = keywords.split(",").map(word => word.trim().toLowerCase());
+                if (keywordList.some(keyword => userInput.includes(keyword))) {
+                    const confidence = aiMemory.words[keywords].bias;
+                    if (confidence > highestConfidence) {
+                        bestMatch = keywords;
+                        highestConfidence = confidence;
+                    }
+                }
+            });
 
-                if (confidence > highestConfidence) {
-                    bestMatch = keyword;
-                    highestConfidence = confidence;
+            // Check for phrase matches
+            Object.keys(aiMemory.phrases).forEach((phrase) => {
+                if (userInput.includes(phrase)) {
+                    bestMatch = phrase;
+                    highestConfidence = aiMemory.phrases[phrase].bias;
                 }
             });
 
             if (bestMatch) {
-                const responses = aiMemory.words[bestMatch].responses;
+                const responses = aiMemory.words[bestMatch] ? aiMemory.words[bestMatch].responses : aiMemory.phrases[bestMatch].responses;
                 displayMixedResponses(responses, bestMatch, highestConfidence);
             } else {
                 responsePreview.innerHTML = "I don't understand. Can you train me?";
@@ -264,52 +279,56 @@
             const responseContainer = document.getElementById("responseContainer");
             responseContainer.innerHTML = ""; // Clear previous responses
 
-            responses.forEach((response, index) => {
-                const responseCard = document.createElement("div");
-                responseCard.className = "response-card";
+            // Randomly pick one response
+            const randomIndex = Math.floor(Math.random() * responses.length);
+            const selectedResponse = responses[randomIndex];
 
-                responseCard.innerHTML = `
-                    <p>${response.text}</p>
-                    <div>
-                        <button onclick="likeResponse('${keyword}', ${index})">👍 Like</button>
-                        <button onclick="dislikeResponse('${keyword}', ${index})">👎 Dislike</button>
-                        <button onclick="editResponse('${keyword}', ${index})">✏️ Edit</button>
-                    </div>
-                `;
-
-                responseContainer.appendChild(responseCard);
-            });
+            const responseCard = document.createElement("div");
+            responseCard.className = "response-card";
+            responseCard.innerHTML = `
+                <p>${selectedResponse}</p>
+                <div>
+                    <button onclick="likeResponse('${keyword}', ${randomIndex})">👍 Like</button>
+                    <button onclick="dislikeResponse('${keyword}', ${randomIndex})">👎 Dislike</button>
+                    <button onclick="editResponse('${keyword}', ${randomIndex})">✏️ Edit</button>
+                </div>
+            `;
+            responseContainer.appendChild(responseCard);
 
             // Show confidence score
             const responsePreview = document.getElementById("responsePreview");
             responsePreview.innerHTML = `<strong>Confidence:</strong> ${confidence.toFixed(2)}`;
         }
 
-        // Training AI with a keyword, response, and bias
+        // Training AI with multiple keywords, responses, and bias
         function trainAI() {
-            const keyword = document.getElementById("keyword").value.toLowerCase();
-            const response = document.getElementById("response").value;
+            const keywordsInput = document.getElementById("keyword").value;
+            const responseInput = document.getElementById("response").value;
             const bias = parseInt(document.getElementById("bias").value) || 1;
             const definition = document.getElementById("definition").value;
 
-            if (!keyword || !response) {
-                alert("Please provide a keyword and response.");
+            if (!keywordsInput || !responseInput) {
+                alert("Please provide keywords and responses.");
                 return;
             }
 
             document.getElementById("loading").style.display = "block"; // Show loading spinner
 
-            if (!aiMemory.words[keyword]) {
-                aiMemory.words[keyword] = {
-                    definitions: "",
-                    responses: [],
-                    bias: 1
-                };
-            }
+            const keywords = keywordsInput.split(",").map(keyword => keyword.trim().toLowerCase());
+            const responses = responseInput.split(",").map(response => response.trim());
 
-            aiMemory.words[keyword].responses.push({ text: response, bias });
-            aiMemory.words[keyword].definitions = definition;
-            aiMemory.words[keyword].bias = bias;
+            keywords.forEach(keyword => {
+                if (!aiMemory.words[keyword]) {
+                    aiMemory.words[keyword] = {
+                        definitions: "",
+                        responses: [],
+                        bias: 1
+                    };
+                }
+                aiMemory.words[keyword].responses = aiMemory.words[keyword].responses.concat(responses);
+                aiMemory.words[keyword].definitions = definition;
+                aiMemory.words[keyword].bias = bias;
+            });
 
             document.getElementById("loading").style.display = "none"; // Hide loading spinner
             document.getElementById("trainingFeedback").innerText = "AI trained successfully!";
@@ -334,21 +353,46 @@
             }
         }
 
+        // Export memory as a JSON file
+        function exportMemory() {
+            const blob = new Blob([JSON.stringify(aiMemory, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'brain.json';
+            link.click();
+        }
+
+        // Import memory from a JSON file
+        function importMemory(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = JSON.parse(e.target.result);
+                aiMemory.words = data.words;
+                displayMemory();
+                saveTraining(); // Save after import
+            };
+
+            reader.readAsText(file);
+        }
+
         // Display the memory in the "Memory" tab
         function displayMemory() {
             const memoryList = document.getElementById("memoryList");
             memoryList.innerHTML = ""; // Clear previous memory list
 
-            Object.keys(aiMemory.words).forEach((keyword) => {
+            Object.keys(aiMemory.words).forEach((keywords) => {
                 const wordCard = document.createElement("div");
                 wordCard.className = "word-card";
 
                 wordCard.innerHTML = `
-                    <strong>${keyword}</strong>
-                    <p><b>Definition:</b> ${aiMemory.words[keyword].definitions}</p>
-                    <p><b>Bias:</b> ${aiMemory.words[keyword].bias}</p>
-                    <p><b>Responses:</b> ${aiMemory.words[keyword].responses.map(response => response.text).join(", ")}</p>
-                    <button onclick="editMemory('${keyword}')">Edit</button>
+                    <strong>${keywords}</strong>
+                    <p><b>Definition:</b> <span id="def-${keywords}">${aiMemory.words[keywords].definitions}</span></p>
+                    <p><b>Bias:</b> <span id="bias-${keywords}">${aiMemory.words[keywords].bias}</span></p>
+                    <p><b>Responses:</b> <span id="responses-${keywords}">${aiMemory.words[keywords].responses.join(", ")}</span></p>
+                    <button onclick="editMemory('${keywords}')">Edit</button>
+                    <button onclick="deleteMemory('${keywords}')">Delete</button>
                 `;
 
                 memoryList.appendChild(wordCard);
@@ -356,48 +400,40 @@
         }
 
         // Edit a word's memory
-        function editMemory(keyword) {
-            const newDefinition = prompt("Enter new definition for the word:", aiMemory.words[keyword].definitions);
-            const newBias = prompt("Enter new bias for the word:", aiMemory.words[keyword].bias);
+        function editMemory(keywords) {
+            const defSpan = document.getElementById(`def-${keywords}`);
+            const biasSpan = document.getElementById(`bias-${keywords}`);
+            const respSpan = document.getElementById(`responses-${keywords}`);
+            const editButton = event.target;
+            
+            // Toggle to 'done' and make fields editable
+            if (editButton.innerText === "Edit") {
+                defSpan.contentEditable = "true";
+                biasSpan.contentEditable = "true";
+                respSpan.contentEditable = "true";
+                editButton.innerText = "Done";
+            } else {
+                defSpan.contentEditable = "false";
+                biasSpan.contentEditable = "false";
+                respSpan.contentEditable = "false";
+                editButton.innerText = "Edit";
 
-            aiMemory.words[keyword].definitions = newDefinition || aiMemory.words[keyword].definitions;
-            aiMemory.words[keyword].bias = parseInt(newBias) || aiMemory.words[keyword].bias;
-
-            saveTraining(); // Save changes to localStorage
-            displayMemory(); // Update the memory display
-        }
-
-        // Like response (increase bias)
-        function likeResponse(keyword, index) {
-            aiMemory.words[keyword].responses[index].bias += 1;
-            saveTraining();
-            generateResponse(); // Update the response
-        }
-
-        // Dislike response (decrease bias)
-        function dislikeResponse(keyword, index) {
-            aiMemory.words[keyword].responses[index].bias -= 1;
-            saveTraining();
-            generateResponse(); // Update the response
-        }
-
-        // Edit response text
-        function editResponse(keyword, index) {
-            const newResponse = prompt("Edit the response:", aiMemory.words[keyword].responses[index].text);
-            if (newResponse !== null) {
-                aiMemory.words[keyword].responses[index].text = newResponse;
+                // Save edited memory
+                aiMemory.words[keywords].definitions = defSpan.innerText;
+                aiMemory.words[keywords].bias = parseInt(biasSpan.innerText);
+                aiMemory.words[keywords].responses = respSpan.innerText.split(",");
                 saveTraining();
-                generateResponse(); // Update the response
             }
         }
 
-        // Calculate similarity between two strings (basic example)
-        function calculateSimilarity(str1, str2) {
-            const commonWords = str1.split(" ").filter(word => str2.includes(word)).length;
-            return commonWords / Math.max(str1.split(" ").length, str2.split(" ").length);
+        // Delete a word's memory
+        function deleteMemory(keywords) {
+            delete aiMemory.words[keywords];
+            saveTraining();
+            displayMemory();
         }
 
-        // Start by loading saved training data
+        // Load memory when the page is ready
         loadTraining();
     </script>
 
