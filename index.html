@@ -80,6 +80,26 @@
       background-color: #e8f0fe;
       border: 1px solid #4285F4;
       border-radius: 4px;
+      text-align: center;
+    }
+    /* Status styling */
+    .status-green {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: inline-block;
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .status-red {
+      background-color: #F44336;
+      color: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: inline-block;
+      font-size: 24px;
+      font-weight: bold;
     }
   </style>
 </head>
@@ -96,34 +116,16 @@
       <h1>How to Change Your Name Servers on Chrome OS</h1>
       <p>Please follow these steps to update your DNS settings:</p>
       <ol>
-        <li>
-          <strong>Open Settings:</strong> Click on the clock in the bottom-right corner of your screen and then click the gear icon to open Settings.
-        </li>
-        <li>
-          <strong>Go to the Network Section:</strong> In the Settings menu, click on "Network" from the left-hand side.
-        </li>
-        <li>
-          <strong>Select Your Network:</strong> Click on the Wi-Fi network you’re currently connected to.
-        </li>
-        <li>
-          <strong>Access Network Details:</strong> Scroll down to find the "Network" section.
-        </li>
-        <li>
-          <strong>Set Custom Name Servers:</strong> Choose the option for "Custom name servers."
-        </li>
-        <li>
-          <strong>Enter DNS Addresses:</strong> Input <strong>45.90.28.60</strong> and <strong>45.90.30.60</strong> in the provided fields.
-        </li>
-        <li>
-          <strong>Configure NextDNS:</strong> Once the DNS settings have been updated, click the button below to calibrate.
-        </li>
-        <li>
-          <strong>Restart Chrome OS:</strong> Finally, restart your device.
-        </li>
+        <li><strong>Open Settings:</strong> Click on the clock in the bottom-right corner of your screen and then click the gear icon to open Settings.</li>
+        <li><strong>Go to the Network Section:</strong> In the Settings menu, click on "Network" from the left-hand side.</li>
+        <li><strong>Select Your Network:</strong> Click on the Wi-Fi network you’re currently connected to.</li>
+        <li><strong>Access Network Details:</strong> Scroll down to find the "Network" section.</li>
+        <li><strong>Set Custom Name Servers:</strong> Choose the option for "Custom name servers."</li>
+        <li><strong>Enter DNS Addresses:</strong> Input <strong>45.90.28.60</strong> and <strong>45.90.30.60</strong> in the provided fields.</li>
+        <li><strong>Configure NextDNS:</strong> Once the DNS settings have been updated, click the button below to calibrate.</li>
+        <li><strong>Restart Chrome OS:</strong> Finally, restart your device.</li>
       </ol>
-      <button id="nextdnsButton" onclick="window.open('https://link-ip.nextdns.io/bc341c/a8709ab32d67516d', '_blank');">
-        Open NextDNS Configuration
-      </button>
+      <button id="nextdnsButton" onclick="window.open('https://link-ip.nextdns.io/bc341c/a8709ab32d67516d', '_blank');">Open NextDNS Configuration</button>
     </div>
     
     <!-- Turn Off tab content -->
@@ -131,30 +133,20 @@
       <h1>How to Turn Off Custom Name Settings</h1>
       <p>Follow these steps to disable your custom name servers and restart your device:</p>
       <ol>
-        <li>
-          <strong>Open Settings:</strong> Click on the clock in the bottom-right corner and then click the gear icon.
-        </li>
-        <li>
-          <strong>Navigate to Network:</strong> Select "Network" from the side menu.
-        </li>
-        <li>
-          <strong>Select Your Network:</strong> Click on your active Wi-Fi network.
-        </li>
-        <li>
-          <strong>Disable Custom Name Servers:</strong> Toggle off the option for "Custom name servers."
-        </li>
-        <li>
-          <strong>Restart Your Device:</strong> Restart your Chrome OS device to apply the changes.
-        </li>
+        <li><strong>Open Settings:</strong> Click on the clock in the bottom-right corner and then click the gear icon.</li>
+        <li><strong>Navigate to Network:</strong> Select "Network" from the side menu.</li>
+        <li><strong>Select Your Network:</strong> Click on your active Wi-Fi network.</li>
+        <li><strong>Disable Custom Name Servers:</strong> Toggle off the option for "Custom name servers."</li>
+        <li><strong>Restart Your Device:</strong> Restart your Chrome OS device to apply the changes.</li>
       </ol>
       <a class="restart" href="javascript:location.reload();">Restart Now</a>
     </div>
-    
-    <!-- Connection check section -->
-    <div id="connectionCheck">
-      <h2>Connection Status</h2>
-      <p id="connectionStatus">Checking connection...</p>
-    </div>
+  </div>
+  
+  <!-- Connection check section -->
+  <div id="connectionCheck">
+    <h2>Connection Status</h2>
+    <p id="status" class="status-red">Checking connection...</p>
   </div>
   
   <script>
@@ -176,23 +168,27 @@
       }
     }
     
-    // Function to check if gogaurdian.com is reachable by pinging its favicon
-    function checkConnection() {
-      var img = new Image();
-      img.onload = function() {
-        // If image loads, the site is reachable – update the status accordingly.
-        document.getElementById('connectionStatus').innerText = 'gogaurdian.com is reachable: You are not connected';
-      }
-      img.onerror = function() {
-        // If image fails to load, assume the site is not reachable.
-        document.getElementById('connectionStatus').innerText = 'gogaurdian.com is not reachable: You are connected';
-      }
-      // Adding a random query parameter to avoid caching
-      img.src = 'https://gogaurdian.com/favicon.ico?rand=' + Math.random();
+    // Function to check GoGuardian reachability using fetch
+    function checkGoGuardian() {
+      const statusElement = document.getElementById('status');
+      document.title = '🟢 Checking...';
+      
+      fetch('https://www.goguardian.com/', { mode: 'no-cors' })
+        .then(() => {
+          statusElement.textContent = 'GoGuardian is reachable ✅';
+          statusElement.className = 'status-green';
+          document.title = '🔴 GoGuardian Reachable';
+        })
+        .catch(() => {
+          statusElement.textContent = 'GoGuardian is NOT reachable ❌';
+          statusElement.className = 'status-red';
+          document.title = '🟢 GoGuardian Not Reachable';
+        });
     }
     
-    // Run the connection check every second
-    setInterval(checkConnection, 1000);
+    // Run the GoGuardian check every 3000ms (3 seconds)
+    setInterval(checkGoGuardian, 3000);
+    checkGoGuardian();
   </script>
 </body>
 </html>
