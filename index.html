@@ -1,413 +1,198 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Memory & Training</title>
-<style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f7f7f7;
-            color: #333;
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        /* Tabs */
-        .tab {
-            display: inline-block;
-            padding: 10px 20px;
-            background-color: #ccc;
-            margin-right: 5px;
-            cursor: pointer;
-            border-radius: 5px;
-        }
-
-        .tab.active {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        /* Content Areas */
-        .tab-content {
-            display: none;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 5px;
-            margin-top: 20px;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        .input-group {
-            margin: 10px 0;
-        }
-
-        label {
-            font-weight: bold;
-        }
-
-        input, textarea {
-            width: 100%;
-            padding: 8px;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 8px 12px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .loading {
-            display: none;
-            font-size: 18px;
-            color: #999;
-        }
-
-        .feedback {
-            margin-top: 20px;
-            color: #007b00;
-        }
-
-        .response-container {
-            margin-top: 20px;
-        }
-
-        .response-card {
-            background-color: #f0f0f0;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        .response-card div {
-            margin-top: 10px;
-        }
-
-        .word-card {
-            background-color: #e0f7fa;
-            padding: 15px;
-            border-radius: 4px;
-            margin-bottom: 10px;
-        }
-
-        .word-card button {
-            margin: 5px;
-        }
-
-        .memory-list {
-            margin-top: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Name Settings UI Tutorial</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    #container {
+      background: white;
+      padding: 20px;
+      border-radius: 5px;
+      max-width: 800px;
+      margin: auto;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    /* Tab header styling */
+    #tabs {
+      display: flex;
+      border-bottom: 1px solid #ccc;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: 1px solid #ccc;
+      border-bottom: none;
+      background: #f4f4f4;
+      margin-right: 5px;
+      transition: background 0.3s;
+    }
+    .tab:hover {
+      background: #e0e0e0;
+    }
+    .tab.active {
+      background: white;
+      font-weight: bold;
+    }
+    /* Tab content styling */
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    h1 {
+      text-align: center;
+    }
+    ol {
+      margin-top: 20px;
+      line-height: 1.6;
+    }
+    li {
+      margin-bottom: 15px;
+    }
+    button, a.restart {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      font-size: 16px;
+      text-decoration: none;
+      color: white;
+      background-color: #4285F4;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    a.restart {
+      background-color: #0F9D58;
+      margin-left: 10px;
+    }
+    /* Connection check styling */
+    #connectionCheck {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #e8f0fe;
+      border: 1px solid #4285F4;
+      border-radius: 4px;
+    }
+  </style>
 </head>
 <body>
-
-    <div class="container">
-        <h1>AI Memory & Training</h1>
-
-        <!-- Tab navigation -->
-        <div>
-            <div class="tab active" onclick="showTab('chat')">Chat</div>
-            <div class="tab" onclick="showTab('train')">Train</div>
-            <div class="tab" onclick="showTab('memory')">Memory</div>
-        </div>
-
-        <!-- Chat Tab -->
-        <div id="chatTab" class="tab-content active">
-            <div class="input-group">
-                <label for="userInput">Talk to the AI:</label>
-                <input type="text" id="userInput" placeholder="Ask the AI something..." />
-                <button onclick="generateResponse()">Send</button>
-            </div>
-
-            <div id="responsePreview"></div>
-            <div class="response-container" id="responseContainer"></div>
-
-            <div id="loading" class="loading">Training in progress...</div>
-        </div>
-
-        <!-- Training Tab -->
-        <div id="trainTab" class="tab-content">
-            <h2>Train the AI</h2>
-
-            <div class="input-group">
-                <label for="keyword">Keywords (comma separated):</label>
-                <input type="text" id="keyword" placeholder="Enter keywords" />
-            </div>
-
-            <div class="input-group">
-                <label for="response">Responses (comma separated):</label>
-                <textarea id="response" placeholder="Enter responses"></textarea>
-            </div>
-
-            <div class="input-group">
-                <label for="definition">Definition (optional):</label>
-                <textarea id="definition" placeholder="Enter definition (optional)"></textarea>
-            </div>
-
-            <div class="input-group">
-                <label for="bias">Bias (default: 1):</label>
-                <input type="number" id="bias" value="1" min="0" />
-            </div>
-
-            <button onclick="trainAI()">Train</button>
-            <button onclick="saveTraining()">Save Training</button>
-            <button onclick="loadTraining()">Load Training</button>
-
-            <hr>
-
-        </div>
-
-        <!-- Memory Tab -->
-        <div id="memoryTab" class="tab-content">
-            <h2>AI Memory</h2>
-            <div id="memoryList" class="memory-list"></div>
-
-            <button onclick="exportMemory()">Export Memory</button>
-            <input type="file" id="importFile" onchange="importMemory(event)" style="display:none" />
-            <button onclick="document.getElementById('importFile').click()">Import Memory</button>
-        </div>
-
-        <div id="trainingFeedback" class="feedback"></div>
+  <div id="container">
+    <!-- Tab headers -->
+    <div id="tabs">
+      <div class="tab active" onclick="openTab('setup')">Setup</div>
+      <div class="tab" onclick="openTab('turnOff')">Turn Off</div>
     </div>
-
-    <script>
-        const aiMemory = {
-            words: {}, // Stores definitions, responses, and bias
-            phrases: {}, // Stores multi-word phrases
-        };
-
-        // Show the appropriate tab
-        function showTab(tab) {
-            const chatTab = document.getElementById("chatTab");
-            const trainTab = document.getElementById("trainTab");
-            const memoryTab = document.getElementById("memoryTab");
-            const chatTabButton = document.querySelector('.tab:nth-child(1)');
-            const trainTabButton = document.querySelector('.tab:nth-child(2)');
-            const memoryTabButton = document.querySelector('.tab:nth-child(3)');
-
-            if (tab === 'chat') {
-                chatTab.classList.add("active");
-                trainTab.classList.remove("active");
-                memoryTab.classList.remove("active");
-                chatTabButton.classList.add("active");
-                trainTabButton.classList.remove("active");
-                memoryTabButton.classList.remove("active");
-            } else if (tab === 'train') {
-                chatTab.classList.remove("active");
-                trainTab.classList.add("active");
-                memoryTab.classList.remove("active");
-                chatTabButton.classList.remove("active");
-                trainTabButton.classList.add("active");
-                memoryTabButton.classList.remove("active");
-            } else if (tab === 'memory') {
-                chatTab.classList.remove("active");
-                trainTab.classList.remove("active");
-                memoryTab.classList.add("active");
-                chatTabButton.classList.remove("active");
-                trainTabButton.classList.remove("active");
-                memoryTabButton.classList.add("active");
-                displayMemory();
-            }
+    
+    <!-- Setup tab content -->
+    <div id="setup" class="tab-content active">
+      <h1>How to Change Your Name Servers on Chrome OS</h1>
+      <p>Please follow these steps to update your DNS settings:</p>
+      <ol>
+        <li>
+          <strong>Open Settings:</strong> Click on the clock in the bottom-right corner of your screen and then click the gear icon to open Settings.
+        </li>
+        <li>
+          <strong>Go to the Network Section:</strong> In the Settings menu, click on "Network" from the left-hand side.
+        </li>
+        <li>
+          <strong>Select Your Network:</strong> Click on the Wi-Fi network you’re currently connected to.
+        </li>
+        <li>
+          <strong>Access Network Details:</strong> Scroll down to find the "Network" section.
+        </li>
+        <li>
+          <strong>Set Custom Name Servers:</strong> Choose the option for "Custom name servers."
+        </li>
+        <li>
+          <strong>Enter DNS Addresses:</strong> Input <strong>45.90.28.60</strong> and <strong>45.90.30.60</strong> in the provided fields.
+        </li>
+        <li>
+          <strong>Configure NextDNS:</strong> Once the DNS settings have been updated, click the button below to calibrate.
+        </li>
+        <li>
+          <strong>Restart Chrome OS:</strong> Finally, restart your device.
+        </li>
+      </ol>
+      <button id="nextdnsButton" onclick="window.open('https://link-ip.nextdns.io/bc341c/a8709ab32d67516d', '_blank');">
+        Open NextDNS Configuration
+      </button>
+    </div>
+    
+    <!-- Turn Off tab content -->
+    <div id="turnOff" class="tab-content">
+      <h1>How to Turn Off Custom Name Settings</h1>
+      <p>Follow these steps to disable your custom name servers and restart your device:</p>
+      <ol>
+        <li>
+          <strong>Open Settings:</strong> Click on the clock in the bottom-right corner and then click the gear icon.
+        </li>
+        <li>
+          <strong>Navigate to Network:</strong> Select "Network" from the side menu.
+        </li>
+        <li>
+          <strong>Select Your Network:</strong> Click on your active Wi-Fi network.
+        </li>
+        <li>
+          <strong>Disable Custom Name Servers:</strong> Toggle off the option for "Custom name servers."
+        </li>
+        <li>
+          <strong>Restart Your Device:</strong> Restart your Chrome OS device to apply the changes.
+        </li>
+      </ol>
+      <a class="restart" href="javascript:location.reload();">Restart Now</a>
+    </div>
+    
+    <!-- Connection check section -->
+    <div id="connectionCheck">
+      <h2>Connection Status</h2>
+      <p id="connectionStatus">Checking connection...</p>
+    </div>
+  </div>
+  
+  <script>
+    // Tab switching function
+    function openTab(tabId) {
+      var tabs = document.getElementsByClassName('tab');
+      var contents = document.getElementsByClassName('tab-content');
+      for (var i = 0; i < tabs.length; i++) {
+        tabs[i].classList.remove('active');
+        contents[i].classList.remove('active');
+      }
+      document.getElementById(tabId).classList.add('active');
+      // Activate the corresponding tab header based on innerText
+      var tabButtons = document.getElementById('tabs').children;
+      for (var i = 0; i < tabButtons.length; i++) {
+        if (tabButtons[i].innerText.trim() === (tabId === 'setup' ? 'Setup' : 'Turn Off')) {
+          tabButtons[i].classList.add('active');
         }
-
-        // Generate a response after the AI is trained
-        function generateResponse() {
-            const userInput = document.getElementById("userInput").value.toLowerCase();
-            const responsePreview = document.getElementById("responsePreview");
-
-            if (!userInput) {
-                responsePreview.innerHTML = "Please say something.";
-                return;
-            }
-
-            let bestMatch = null;
-            let highestConfidence = 0;
-
-            // Find the best match, considering bias and context
-            Object.keys(aiMemory.words).forEach((keywords) => {
-                const keywordList = keywords.split(",").map(word => word.trim().toLowerCase());
-                if (keywordList.some(keyword => userInput.includes(keyword))) {
-                    const confidence = aiMemory.words[keywords].bias;
-                    if (confidence > highestConfidence) {
-                        bestMatch = keywords;
-                        highestConfidence = confidence;
-                    }
-                }
-            });
-
-            // Check for phrase matches
-            Object.keys(aiMemory.phrases).forEach((phrase) => {
-                if (userInput.includes(phrase)) {
-                    bestMatch = phrase;
-                    highestConfidence = aiMemory.phrases[phrase].bias;
-                }
-            });
-
-            if (bestMatch) {
-                const responses = aiMemory.words[bestMatch] ? aiMemory.words[bestMatch].responses : aiMemory.phrases[bestMatch].responses;
-                displayMixedResponses(responses, bestMatch, highestConfidence);
-            } else {
-                responsePreview.innerHTML = "I don't understand. Can you train me?";
-                learnFromUserInput(userInput);
-            }
-        }
-
-        // Show the best mixed responses with feedback options
-        function displayMixedResponses(responses, keyword, confidence) {
-            const responseContainer = document.getElementById("responseContainer");
-            responseContainer.innerHTML = ""; // Clear previous responses
-
-            // Randomly pick one response
-            const randomIndex = Math.floor(Math.random() * responses.length);
-            const selectedResponse = responses[randomIndex];
-
-            const responseCard = document.createElement("div");
-            responseCard.className = "response-card";
-            responseCard.innerHTML = `
-                <p>${selectedResponse}</p>
-                <div>
-                    <button onclick="likeResponse('${keyword}', ${randomIndex})">👍 Like</button>
-                    <button onclick="dislikeResponse('${keyword}', ${randomIndex})">👎 Dislike</button>
-                    <button onclick="editResponse('${keyword}', ${randomIndex})">✏️ Edit</button>
-                </div>
-            `;
-            responseContainer.appendChild(responseCard);
-
-            // Show confidence score
-            const responsePreview = document.getElementById("responsePreview");
-            responsePreview.innerHTML = `<strong>Confidence:</strong> ${confidence.toFixed(2)}`;
-        }
-
-        // Learning from user input: adds new keywords and phrases dynamically
-        // Learning from user input: adds new keywords and phrases dynamically
-function learnFromUserInput(input) {
-    const confirmation = window.confirm(`Did you mean to introduce a new word/phrase? You said: "${input}"`);
-    if (confirmation) {
-        const newResponse = prompt("Enter a response for this phrase:");
-
-        if (newResponse) {
-            const newKeyword = input.trim().toLowerCase(); // Use the user's input directly as the keyword
-            aiMemory.words[newKeyword] = {
-                responses: [newResponse],
-                bias: 1
-            };
-            saveTraining();
-            alert("New keyword and response added!");
-        }
+      }
     }
-}
-
-
-        // Training AI with multiple keywords, responses, and bias
-        function trainAI() {
-            const keywordsInput = document.getElementById("keyword").value;
-            const responseInput = document.getElementById("response").value;
-            const bias = parseInt(document.getElementById("bias").value) || 1;
-            const definition = document.getElementById("definition").value;
-
-            if (!keywordsInput || !responseInput) {
-                alert("Please provide keywords and responses.");
-                return;
-            }
-
-            document.getElementById("loading").style.display = "block"; // Show loading spinner
-
-            const keywords = keywordsInput.split(",").map(keyword => keyword.trim().toLowerCase());
-            const responses = responseInput.split(",").map(response => response.trim());
-
-            keywords.forEach(keyword => {
-                if (!aiMemory.words[keyword]) {
-                    aiMemory.words[keyword] = {
-                        definitions: "",
-                        responses: [],
-                        bias: 1
-                    };
-                }
-                aiMemory.words[keyword].responses = aiMemory.words[keyword].responses.concat(responses);
-                aiMemory.words[keyword].definitions = definition;
-                aiMemory.words[keyword].bias = bias;
-            });
-
-            document.getElementById("loading").style.display = "none"; // Hide loading spinner
-            document.getElementById("trainingFeedback").innerText = "AI trained successfully!";
-            setTimeout(() => {
-                document.getElementById("trainingFeedback").innerText = ""; // Clear feedback after a few seconds
-            }, 3000);
-
-            // Auto save after training
-            saveTraining();
-        }
-
-        // Saving the training data to localStorage
-        function saveTraining() {
-            localStorage.setItem("aiMemory", JSON.stringify(aiMemory));
-        }
-
-        // Load training data from localStorage
-        function loadTraining() {
-            const savedData = localStorage.getItem("aiMemory");
-            if (savedData) {
-                aiMemory.words = JSON.parse(savedData).words;
-            }
-        }
-
-        // Export memory as a JSON file
-        function exportMemory() {
-            const blob = new Blob([JSON.stringify(aiMemory, null, 2)], { type: 'application/json' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'aiMemory.json';
-            link.click();
-        }
-
-        // Import memory from a JSON file
-        function importMemory(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const importedData = JSON.parse(e.target.result);
-                aiMemory.words = importedData.words || {};
-                displayMemory();
-            };
-            reader.readAsText(file);
-        }
-
-        // Display all current memory in the "Memory" tab
-        function displayMemory() {
-            const memoryList = document.getElementById("memoryList");
-            memoryList.innerHTML = JSON.stringify(aiMemory.words, null, 2);
-        }
-
-        window.onload = function() {
-            loadTraining();
-        };
-
-    </script>
+    
+    // Function to check if gogaurdian.com is reachable by pinging its favicon
+    function checkConnection() {
+      var img = new Image();
+      img.onload = function() {
+        // If image loads, the site is reachable – update the status accordingly.
+        document.getElementById('connectionStatus').innerText = 'gogaurdian.com is reachable: You are not connected';
+      }
+      img.onerror = function() {
+        // If image fails to load, assume the site is not reachable.
+        document.getElementById('connectionStatus').innerText = 'gogaurdian.com is not reachable: You are connected';
+      }
+      // Adding a random query parameter to avoid caching
+      img.src = 'https://gogaurdian.com/favicon.ico?rand=' + Math.random();
+    }
+    
+    // Run the connection check every second
+    setInterval(checkConnection, 1000);
+  </script>
 </body>
 </html>
-
-
